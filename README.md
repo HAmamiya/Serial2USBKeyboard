@@ -20,7 +20,7 @@ Connect both devices with 3 cables: tx->rx, rx->tx, GND->GND. Consult www if you
 
 ## Usage
 1. Plug the USB to UART device into the client computer (Raspberry pi)
-2. Start the Serial user interface (Serial monitor)
+2. Start the Serial user interface (Serial monitor, 9600–8-N-1, (PuTTY) Linux keyboard)
 3. Plug the ATMEGA32U4 into server/the computer you want to control
 4. The Serial monitor shall prompt you to type `qwerty` with Enter for enabling the Serial to USB keybord.
 
@@ -41,7 +41,11 @@ For those keys that are not shown above, they may already been mapped but I did 
 4. Ctrl + n	Toggle Mouse mode
 
 ## Mouse mode
-When you press Ctrl + g, the ATMEGA32U4 will switch from Keyboard to Mouse mode. The Serial monitor will prompt you how to use the Mouse mode. In Mouse mode, all keyboard keys are unavilable.
+When you press Ctrl + n, the ATMEGA32U4 will switch from Keyboard to Mouse mode. The Serial monitor will prompt you how to use the Mouse mode. In Mouse mode, all keyboard keys are unavilable.
+
+## Increase Serial RX buffer (optional)
+To reduce the chance on Serial buffer full, you may refer to 
+https://hackaday.com/2020/07/13/surgery-on-the-arduino-ide-makes-bigger-serial-buffers/ for additional changes.
 
 ## Monitor
 This program does not handle monitor part. For monitor, you may purchase a HDMI capture card ([reference](https://blog.j2i.net/2021/04/19/hdmi-capture-on-the-raspberry-pi/)) and plug the capture card in Raspberry pi. The best streaming command so far I tested is as follows:
