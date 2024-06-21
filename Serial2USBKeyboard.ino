@@ -78,7 +78,7 @@ void initSerials()
 	Serial1.begin(9600);
 	while (!Serial1);
 	Serial1.println(F("Serial1 ready!"));
-	Serial1.println(F("Welcome to use Serial to USB keyboard v1.0 developed by Hazuki. To prevent floating pin messing the input, please type \"qwerty\" and press Enter for enabling the keyboard."));
+	Serial1.println(F("Welcome to use Serial to USB keyboard v1.1 developed by Hazuki. To prevent floating pin messing the input, please type \"qwerty\" and press Enter for enabling the keyboard."));
 }
 
 void print2serial(int msg)
@@ -201,6 +201,13 @@ void loop() {
 			{
 				switch (inCh) 
 				{
+					case 27: /*Double ESC keys*/
+					Keyboard.write(KEY_ESC);
+					Keyboard.write(KEY_ESC);
+					Serial1.println(F("\u001B[32m[ESC][ESC]\u001B[0m"));
+					Fkeys=false;
+					break;
+					
 					case 48: /*F9 - need preceding 50*/
 					if(F50)
 					{
