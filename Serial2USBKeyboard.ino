@@ -2,7 +2,7 @@
 Console colouring: https://stackoverflow.com/questions/5762491/how-to-print-color-in-console-using-system-out-println
 
 List of keyboard input start with 27 (screen /dev/ttyUSB0 in Debian 12.5):
-Sequence - Key (identifier after 27) (Mouse identifier after 27)
+Sequence - Key (identifier after 27)
 79 80 - F1 (80)
 79 81 - F2 (81)
 79 82 - F3 (82)
@@ -11,20 +11,20 @@ Sequence - Key (identifier after 27) (Mouse identifier after 27)
 91 49 55 126 - F6 (55 + ignore 1 suffix) 
 91 49 56 126 - F7 (56 + ignore 1 suffix) 
 91 49 57 126 - F8 (57 + ignore 1 suffix) 
-91 49 126 - HOME (126) (49)
+91 49 126 - HOME (126)
 91 50 48 126 - F9 (50 + 48 + ignore 1 suffix)
 91 50 49 126 - F10 (50 + 49 + ignore 1 suffix)
 91 50 51 126 - F11 (50 + 51 + ignore 1 suffix)
 91 50 51 126 - F12 (50 + 52 + ignore 1 suffix)
-91 50 126 - INSERT (50 + 126) (50)
-91 51 126 - DELETE (51 + ignore 1 suffix) (51)
-91 52 126 - END (52 + ignore 1 suffix) (52)
+91 50 126 - INSERT (50 + 126)
+91 51 126 - DELETE (51 + ignore 1 suffix)
+91 52 126 - END (52 + ignore 1 suffix)
 91 53 126 - PGUP (53 + ignore 1 suffix) 
-91 54 126 - PGDN (54 + ignore 1 suffix) (54)
-91 65 - UP (65) (65)
-91 66 - DOWN (66) (66)
-91 67 - RIGHT (67) (67)
-91 68 - LEFT (68) (68)
+91 54 126 - PGDN (54 + ignore 1 suffix
+91 65 - UP (65)
+91 66 - DOWN (66)
+91 67 - RIGHT (67)
+91 68 - LEFT (68)
 (F10-F12 binded by system in Debian, but available in Windows Putty 0.81)
 
 Handled Ctrl + key combinations:
@@ -34,6 +34,7 @@ Ctrl + u
 Ctrl + v
 Ctrl + w
 Ctrl + x
+Ctrl + z
 
 Special Ctrl + key combinations:
 Ctrl + g	Disable Flood protection for 30 seconds
@@ -78,7 +79,7 @@ void initSerials()
 	Serial1.begin(9600);
 	while (!Serial1);
 	Serial1.println(F("Serial1 ready!"));
-	Serial1.println(F("Welcome to use Serial to USB keyboard v1.1 developed by Hazuki. To prevent floating pin messing the input, please type \"qwerty\" and press Enter for enabling the keyboard."));
+	Serial1.println(F("Welcome to use Serial to USB keyboard v1.2 developed by Hazuki. To prevent floating pin messing the input, please type \"qwerty\" and press Enter for enabling the keyboard."));
 }
 
 void print2serial(int msg)
@@ -150,53 +151,7 @@ void loop() {
 		if(identified)
 		{
 			TXLED0; //TX LED is not tied to a normally controlled pin so a macro is needed, turn LED OFF
-			if(MouseMode)
-			{
-				switch (inCh) 
-				{
-					case 14:
-					MouseMode=false;
-					Serial1.println(F("\u001B[35mMouse Mode disabled\u001B[0m"));
-					break;
-					case 49:
-					Mouse.move(0, 0, 1);
-					break;
-					case 50:
-					if(Mouse.isPressed())
-					{
-						Mouse.release();
-						Serial1.println(F("\u001B[35mMouse Left button released\u001B[0m"));
-					}else
-					{
-						Mouse.press();
-						Serial1.println(F("\u001B[35mMouse Left button pressed\u001B[0m"));						
-					}
-					break;
-					case 51:
-					if(!Mouse.isPressed())
-						Mouse.click();
-					break;
-					case 52:
-					Mouse.move(0, 0, -1);
-					break;
-					case 54:
-					Mouse.click(MOUSE_RIGHT);
-					break;
-					case 65:
-					Mouse.move(0, -10, 0);
-					break;
-					case 66:
-					Mouse.move(0, 10, 0);
-					break;
-					case 67:
-					Mouse.move(10, 0, 0);
-					break;
-					case 68:
-					Mouse.move(-10, 0, 0);
-					break;
-					
-				}
-			}else
+
 			if(Fkeys)
 			{
 				switch (inCh) 
@@ -240,8 +195,13 @@ void loop() {
 						Serial1.println(F("\u001B[32m[F11]\u001B[0m"));						
 					}else/*DELETE*/
 					{
-						Keyboard.write(KEY_DELETE);
-						Serial1.println(F("\u001B[32m[DEL]\u001B[0m"));
+						if(MouseMode)
+						{	if(!Mouse.isPressed()) Mouse.click();}
+						else
+						{
+							Keyboard.write(KEY_DELETE);
+							Serial1.println(F("\u001B[32m[DEL]\u001B[0m"));
+						}
 					}
 					Fkeys=false;
 					ignorechar=1;
@@ -253,8 +213,13 @@ void loop() {
 						Keyboard.write(KEY_F12);
 						Serial1.println(F("\u001B[32m[F12]\u001B[0m"));						
 					}else{/*END*/
-						Keyboard.write(KEY_END);
-						Serial1.println(F("\u001B[32m[END]\u001B[0m"));
+						if(MouseMode)
+							Mouse.click(MOUSE_RIGHT);
+						else
+						{
+							Keyboard.write(KEY_END);
+							Serial1.println(F("\u001B[32m[END]\u001B[0m"));
+						}
 					}
 					Fkeys=false;
 					ignorechar=1;
@@ -267,16 +232,26 @@ void loop() {
 						Serial1.println(F("\u001B[32m[F5]\u001B[0m"));
 					}else
 					{/*PGUP*/
-						Keyboard.write(KEY_PAGE_UP);
-						Serial1.println(F("\u001B[32m[PGUP]\u001B[0m"));						
+						if(MouseMode)
+							Mouse.move(0, 0, 1);
+						else
+						{
+							Keyboard.write(KEY_PAGE_UP);
+							Serial1.println(F("\u001B[32m[PGUP]\u001B[0m"));
+						}
 					}
 					Fkeys=false;
 					ignorechar=1;
 					break;
 		
 					case 54: /*PGDN*/
-					Keyboard.write(KEY_PAGE_DOWN);
-					Serial1.println(F("\u001B[32m[PGDN]\u001B[0m"));
+					if(MouseMode)
+						Mouse.move(0, 0, -1);
+					else
+					{
+						Keyboard.write(KEY_PAGE_DOWN);
+						Serial1.println(F("\u001B[32m[PGDN]\u001B[0m"));
+					}
 					Fkeys=false;
 					ignorechar=1;
 					break;
@@ -303,26 +278,46 @@ void loop() {
 					break;
 					
 					case 65: /*UP*/
-					Keyboard.write(KEY_UP_ARROW);
-					Serial1.println(F("\u001B[32m[↑]\u001B[0m"));
+					if(MouseMode)
+						Mouse.move(0, -10, 0);
+					else
+					{
+						Keyboard.write(KEY_UP_ARROW);
+						Serial1.println(F("\u001B[32m[↑]\u001B[0m"));
+					}
 					Fkeys=false;
 					break;
 					
 					case 66: /*DOWN*/
-					Keyboard.write(KEY_DOWN_ARROW);
-					Serial1.println(F("\u001B[32m[↓]\u001B[0m"));
+					if(MouseMode)
+						Mouse.move(0, 10, 0);
+					else
+					{
+						Keyboard.write(KEY_DOWN_ARROW);
+						Serial1.println(F("\u001B[32m[↓]\u001B[0m"));
+					}
 					Fkeys=false;
 					break;
 					
 					case 67: /*RIGHT*/
-					Keyboard.write(KEY_RIGHT_ARROW);
-					Serial1.print(F("\u001B[32m[→]\u001B[0m"));
+					if(MouseMode)
+						Mouse.move(10, 0, 0);
+					else
+					{
+						Keyboard.write(KEY_RIGHT_ARROW);
+						Serial1.print(F("\u001B[32m[→]\u001B[0m"));
+					}
 					Fkeys=false;
 					break;
 					
 					case 68: /*LEFT*/
-					Keyboard.write(KEY_LEFT_ARROW);
-					Serial1.print(F("\u001B[32m[←]\u001B[0m"));
+					if(MouseMode)
+						Mouse.move(-10, 0, 0);
+					else
+					{
+						Keyboard.write(KEY_LEFT_ARROW);
+						Serial1.print(F("\u001B[32m[←]\u001B[0m"));
+					}
 					Fkeys=false;
 					break;
 					
@@ -351,10 +346,24 @@ void loop() {
 					break;
 					
 					case 126: 
-					if(F50)
-					{	/*INSERT*/
-						Keyboard.write(KEY_INSERT);
-						Serial1.println(F("\u001B[32m[INS]\u001B[0m"));
+					if(F50)/*INSERT*/
+					{	
+						if(MouseMode)
+						{
+							if(Mouse.isPressed())
+							{
+								Mouse.release();
+								Serial1.println(F("\u001B[35mMouse Left button released\u001B[0m"));
+							}else
+							{
+								Mouse.press();
+								Serial1.println(F("\u001B[35mMouse Left button pressed\u001B[0m"));						
+							}
+						}else
+						{
+							Keyboard.write(KEY_INSERT);
+							Serial1.println(F("\u001B[32m[INS]\u001B[0m"));
+						}
 					}else{/*HOME*/
 						Keyboard.write(KEY_HOME);
 						Serial1.println(F("\u001B[32m[HOME]\u001B[0m"));
@@ -374,94 +383,106 @@ void loop() {
 			else switch (inCh) 
 			{
 				case 3: /*[Ctrl+c]*/
-					Keyboard.press(KEY_LEFT_CTRL);
-					Keyboard.press('c');
-					Keyboard.releaseAll(); 
-					Serial1.println(F("\u001B[32m[Ctrl+c]\u001B[0m"));
-					break;
+				Keyboard.press(KEY_LEFT_CTRL);
+				Keyboard.press('c');
+				Keyboard.releaseAll(); 
+				Serial1.println(F("\u001B[32m[Ctrl+c]\u001B[0m"));
+				break;
 				case 7:
 				flooddisabletime=millis();
 				flooddisabled=true;
-				Serial1.print(F("\u001B[35mFlood detection disabled for 30 seconds. RX buffer size (Byte): \u001B[0m"));
+				Serial1.print(F("\u001B[35mFlood detection disabled for 30 seconds. RX buffer size (Bytes): \u001B[0m"));
 				Serial1.println(SERIAL_RX_BUFFER_SIZE);
 				Serial1.println(F("\u001B[33mWARNING!!! Buffer may full and data will lost if you paste over RX buffer size.\u001B[0m"));
 				break;
 				case 8: /*[Ctrl+h]*/
-					if(reducedfeedback)
-					{
-						reducedfeedback=false;
-						Serial1.println(F("\u001B[35mFeedback enabled\u001B[0m"));
-					}else
-					{
-						reducedfeedback=true;
-						Serial1.println(F("\u001B[35mFeedback disabled\u001B[0m"));						
-					}
+				if(reducedfeedback)
+				{
+					reducedfeedback=false;
+					Serial1.println(F("\u001B[35mFeedback enabled\u001B[0m"));
+				}else
+				{
+					reducedfeedback=true;
+					Serial1.println(F("\u001B[35mFeedback disabled\u001B[0m"));						
+				}
 				break;
 				case 11: /*[Ctrl+k]*/				
-					Keyboard.press(KEY_LEFT_CTRL);
-					Keyboard.press('k');
-					Keyboard.releaseAll(); 
-					Serial1.println(F("\u001B[32m[Ctrl+k]\u001B[0m"));
-					break;
+				Keyboard.press(KEY_LEFT_CTRL);
+				Keyboard.press('k');
+				Keyboard.releaseAll(); 
+				Serial1.println(F("\u001B[32m[Ctrl+k]\u001B[0m"));
+				break;
 				case 13:
-					Keyboard.write(KEY_RETURN);
-					Serial1.println(F("\u001B[32m[Enter]\u001B[0m"));
-					break;
+				Keyboard.write(KEY_RETURN);
+				Serial1.println(F("\u001B[32m[Enter]\u001B[0m"));
+				break;
 				case 14: /*Ctrl+n Mouse mode*/
+				if(MouseMode)
+				{
+					MouseMode=false;
+					Serial1.println(F("\u001B[35mMouse Mode disabled\u001B[0m"));
+				}else
+				{
 					Serial1.println(F("\u001B[35mMouse Mode enabled.\u001B[0m"));
 					Serial1.println(F("\u001B[32m[↑][↓][→][←]\u001B[0mfor mouse position"));
-					Serial1.println(F("\u001B[32m[DELETE][PGDN]\u001B[0m for left and right click respectively"));
-					Serial1.println(F("\u001B[32m[HOME][END]\u001B[0m for scrolling up and down"));
-					Serial1.println(F("\u001B[32m[INSERT]\u001B[0m for toggle pressing/releasing left click"));
+					Serial1.println(F("\u001B[32m[DELETE][END]\u001B[0m for left and right click respectively"));
+					Serial1.println(F("\u001B[32m[PGUP][PGDN]\u001B[0m for scrolling up and down"));
+					Serial1.println(F("\u001B[32m[INSERT]\u001B[0m for pressing/releasing left mouse button"));
 					MouseMode=true;
-					break;
+				}
+				break;
 				case 17:
-					Keyboard.write(KEY_LEFT_GUI);
-					Serial1.println(F("\u001B[32m[OS]\u001B[0m"));
-					break;
+				Keyboard.write(KEY_LEFT_GUI);
+				Serial1.println(F("\u001B[32m[OS]\u001B[0m"));
+				break;
 				case 21: /*[Ctrl+u]*/
-					Keyboard.press(KEY_LEFT_CTRL);
-					Keyboard.press('u');
-					Keyboard.releaseAll(); 
-					Serial1.println(F("\u001B[32m[Ctrl+u]\u001B[0m"));
-					break;
+				Keyboard.press(KEY_LEFT_CTRL);
+				Keyboard.press('u');
+				Keyboard.releaseAll(); 
+				Serial1.println(F("\u001B[32m[Ctrl+u]\u001B[0m"));
+				break;
 				case 22: /*[Ctrl+v]*/
-					Keyboard.press(KEY_LEFT_CTRL);
-					Keyboard.press('v');
-					Keyboard.releaseAll(); 
-					Serial1.println(F("\u001B[32m[Ctrl+v]\u001B[0m"));
-					break;
+				Keyboard.press(KEY_LEFT_CTRL);
+				Keyboard.press('v');
+				Keyboard.releaseAll(); 
+				Serial1.println(F("\u001B[32m[Ctrl+v]\u001B[0m"));
+				break;
 				case 23: /*[Ctrl+w]*/
-					Keyboard.press(KEY_LEFT_CTRL);
-					Keyboard.press('w');
-					Keyboard.releaseAll(); 
-					Serial1.println(F("\u001B[32m[Ctrl+w]\u001B[0m"));
-					break;
+				Keyboard.press(KEY_LEFT_CTRL);
+				Keyboard.press('w');
+				Keyboard.releaseAll(); 
+				Serial1.println(F("\u001B[32m[Ctrl+w]\u001B[0m"));
+				break;
 				case 24: /*[Ctrl+x]*/
-					Keyboard.press(KEY_LEFT_CTRL);
-					Keyboard.press('x');
-					Keyboard.releaseAll(); 
-					Serial1.println(F("\u001B[32m[Ctrl+x]\u001B[0m"));
-					break;						
+				Keyboard.press(KEY_LEFT_CTRL);
+				Keyboard.press('x');
+				Keyboard.releaseAll(); 
+				Serial1.println(F("\u001B[32m[Ctrl+x]\u001B[0m"));
+				break;
+				case 26: /*[Ctrl+z]*/
+				Keyboard.press(KEY_LEFT_CTRL);
+				Keyboard.press('z');
+				Keyboard.releaseAll(); 
+				Serial1.println(F("\u001B[32m[Ctrl+z]\u001B[0m"));
+				break;					
 				case 27:/*special keys - need to reset flood detector*/
-					tick=0;
-					Fkeys=true;
-					Fkeytime = millis();
-					break;
-				
+				tick=0;
+				Fkeys=true;
+				Fkeytime = millis();
+				break;
 				case 127:
-					Keyboard.write(KEY_BACKSPACE);
-					Serial1.print(F("\u001B[32m[BKSP]\u001B[0m"));
-					break;
+				Keyboard.write(KEY_BACKSPACE);
+				Serial1.print(F("\u001B[32m[BKSP]\u001B[0m"));
+				break;
 
 				default:
-					Keyboard.write((char)inCh);
-					if(!reducedfeedback)
-					{
-						if(inCh >127 || inCh <32)
-							Serial1.print(F("\u001B[32m[SC]\u001B[0m"));
-						else Serial1.print((char)inCh);
-					}
+				Keyboard.write((char)inCh);
+				if(!reducedfeedback)
+				{
+					if(inCh >127 || inCh <32)
+						Serial1.print(F("\u001B[32m[SC]\u001B[0m"));
+					else Serial1.print((char)inCh);
+				}
 			}
 			TXLED1; //TX LED macro to turn LED ON
 		} else
@@ -476,10 +497,10 @@ void loop() {
 						identified=true;
 						print2serial(3);
 						Serial1.println(F("Enabled remote keyboard."));
-						Serial1.println(F("\u001B[35mCtrl+h\u001B[0m to toggle feeding back non special character - useful especially when typing password"));
+						Serial1.println(F("\u001B[35mCtrl+h\u001B[0m to toggle feeding back non special character"));
 						Serial1.println(F("\u001B[35mCtrl+g\u001B[0m to disable flood detection for 30 seconds"));
 						Serial1.println(F("\u001B[35mCtrl+q\u001B[0m for OS logo key"));
-						Serial1.println(F("\u001B[35mCtrl+n\u001B[0m for toggle mouse mode"));
+						Serial1.println(F("\u001B[35mCtrl+n\u001B[0m for toggle Mouse Mode"));
 					}
 					else
 					{
